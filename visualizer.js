@@ -1,44 +1,21 @@
-// visualizer.js - handles UI interactions for logs and visualizations
+function startVisualizer(stream) {
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const analyser = ctx.createAnalyser();
+  const src = ctx.createMediaStreamSource(stream);
+  src.connect(analyser);
 
-const sentLog = document.getElementById('sentLog');
-const recvLog = document.getElementById('recvLog');
+  const canvas = document.getElementById('visualizer');
+  const ctx2d = canvas.getContext('2d');
+  const data = new Uint8Array(analyser.frequencyBinCount);
 
-// Add a message to the sent log
-export function addSentLog(msg) {
-  const li = document.createElement('li');
-  li.textContent = msg;
-  sentLog.appendChild(li);
-  sentLog.scrollTop = sentLog.scrollHeight;
-}
-
-// Add a message to the received log
-export function addRecvLog(msg) {
-  const li = document.createElement('li');
-  li.textContent = msg;
-  recvLog.appendChild(li);
-  recvLog.scrollTop = recvLog.scrollHeight;
-}
-
-// Show the monitor mode icon
-export function showMonitorIcon() {
-  const icon = document.createElement('div');
-  icon.id = 'monitorModeIcon';
-  icon.textContent = '👁️ MONITOR MODE';
-  icon.style.position = 'fixed';
-  icon.style.bottom = '20px';
-  icon.style.right = '20px';
-  icon.style.background = 'black';
-  icon.style.color = 'lime';
-  icon.style.padding = '8px 12px';
-  icon.style.borderRadius = '8px';
-  icon.style.fontWeight = 'bold';
-  icon.style.zIndex = '9999';
-  icon.style.animation = 'pulse 1s infinite';
-  document.body.appendChild(icon);
-}
-
-// Hide the monitor mode icon
-export function hideMonitorIcon() {
-  const icon = document.getElementById('monitorModeIcon');
-  if (icon) icon.remove();
+  function draw() {
+    analyser.getByteFrequencyData(data);
+    ctx2d.clearRect(0, 0, canvas.width, canvas.height);
+    ctx2d.fillStyle = 'lime';
+    data.slice(0, 100).forEach((v, i) => {
+      ctx2d.fillRect(i * 3, canvas.height - v / 2, 2, v / 2);
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
 }
